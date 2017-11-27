@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<style>
+    html,body{
+        margin: 0;height: 100%;
+    }
+    *{
+        box-sizing: border-box;
+    }
+    body{
+        display: flex;
+        justify-content: center;align-items: center;
+    }
+    .room{
+        width: 600px;
+    }
+    .room .room__body{
+        height: 70vh;
+        background: #f7f7f7
+    }
+    .room__content{
+        height: 90%;
+        padding: 15px;
+        background: #fff;
+        overflow: scroll;
+    }
+    .room__inpbox{
+        height: 10%;
+        /* background: red; */
+        display: flex;
+        align-items: center;
+    }
+    .room__inpbox button{
+        margin-left: 15px;
+    }
+    .room__body .list-group-item{
+        border: none;
+        position: relative;
+        padding-top: 24px;
+    }
+    .room__body .list-group-item .time{
+        width: 100%;
+        text-align: center;
+        font-size: 12px;
+        color: #a8a8a8;
+        position: absolute;
+        top:12px;
+    }
+    .list-group-item .info{
+        display: flex;
+        align-items: center;
+    }
+    .list-group-item.self .info{
+        flex-direction: row-reverse;
+    }
+</style>
+<body>
+    
+
+    <div class="room panel panel-primary">
+        <div class="panel-heading room__header clearfix">
+            1714聊天室 &nbsp; &nbsp; &nbsp; &nbsp;
+            当前人数：<span class="num"></span>
+            <input id="nickname" value="新朋友" type="text"  class="form-control pull-right" style="width:30%;">
+        </div>
+        <div class="panel-body room__body">
+            <div class="room__content">
+                <ul class="list-group">
+                    
+                </ul>
+            </div>  
+            <div class="room__inpbox">
+                <input id="inp" type="text" class="form-control">
+                <button id="send" class="btn btn-success">send</button>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    //创建socket 
+    var ws = new WebSocket('ws://127.0.0.1:9000')
+	
+//  ws.onopen = function(){
+//      ws.send('我来了')
+//  }
+    ws.onclose = function(){
+    	console.log("服务器关闭")
+    }
+    ws.onerror = function(err){
+    	console.log(err)
+    }
+    $("#send").click(function(){
+    	sendWord()
+    })
+    $("#inp").keydown(function(e){
+    	if (e.keyCode==13) {
+    		sendWord()
+    	}
+    })
+    function sendWord(){
+    	var word=$("#inp").val();
+    	if (word=="") {
+    		alert("发送信息为空！");
+    		return 0;
+    	}
+    	//console.log()
+    	
+    	ws.send(word);
+    	
+    	$("#inp").val('')
+    	
+    }
+    ws.onmessage=function(event){
+    	//console.log(event.data)
+    	let messObj = JSON.parse(event.data)
+    	console.log(messObj)
+    	$(".num").html(messObj.num)
+        let str = `
+            <li class="list-group-item ${messObj.isMe?'self':'other'}">
+                <div class="time">${messObj.time}</div>
+                <div class="info">
+                    <span class="name">${messObj.nickname}</span>：
+                    <button class="word btn btn-success">${messObj.word}</button>
+                </div>
+            </li>
+        `   	
+         $(".list-group").append(str)
+    }
+//  //当服务端发送过来信息的时候
+//  ws.onmessage = function(event){
+//      let messObj = JSON.parse(event.data)
+//      $(".num").html(messObj.num)
+//      let str = `
+//          <li class="list-group-item ${messObj.isMe?'self':'other'}">
+//              <div class="time">${messObj.time}</div>
+//              <div class="info">
+//                  <span class="name">${messObj.nickname}</span>：
+//                  <button class="word btn btn-success">${messObj.word}</button>
+//              </div>
+//          </li>
+//      `
+//      $(".list-group").append(str)
+//  }
+
+//
+//  $("#send").click(function(){
+//      sendWord()
+//  })
+//  $("#inp").keydown(function(e){
+//      if(e.keyCode==13){
+//          sendWord()
+//      }
+//  })
+//  //注意：send方法里只能放字符串
+//  function sendWord(_word){
+//      var word = _word ||$("#inp").val()
+//      if(word==''){
+//          alert('不能发送空的信息')
+//          return ;
+//      }
+//      let message = {
+//          nickname:$("#nickname").val(),
+//          word:word,
+//          time:formatTime()
+//      }
+//      ws.send(JSON.stringify(message))
+//      $("#inp").val('')
+//  }
+//
+    function formatTime(){
+        var date = new Date()
+        
+        return date.getFullYear()+'-'+(date.getMonth()+1)+'-'+date.getDate()+'  '+date.getHours()+':'+date.getMinutes()+':'+date.getSeconds()
+    }
+
+</script>
+</html>
